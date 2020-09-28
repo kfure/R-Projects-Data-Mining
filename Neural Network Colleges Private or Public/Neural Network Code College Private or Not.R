@@ -1,0 +1,35 @@
+install.packages("ISLR")
+library(ISLR)
+install.packages("caTools")
+library(caTools)
+install.packages("neuralnet")
+library(neuralnet)
+print(head(College,2))
+head(College)
+maxs = apply(College[,2:18], 2, max)
+maxs
+mins = apply(College[,2:18], 2, min)
+mins
+scaled.data = as.data.frame(scale(College[,2:18], center = mins, scale = maxs - mins))
+head(scaled.data)
+Private = as.numeric(College$Private) - 1
+head(Private)
+data = cbind(Private, scaled.data)
+set.seed(101)
+split = sample.split(data$Private, SplitRatio= .7)
+train = subset (data, split == TRUE)
+test= subset (data, split == FALSE)
+feats = names(scaled.data)
+feats
+f = paste(feats, collapse = ' + ')
+f = paste('Private ~', f)
+f = as.formula(f)
+f
+nn = neuralnet(f, train, hidden = c(10, 10, 10), linear.output = FALSE)
+pred.nn.values = compute(nn, test[2:18])
+head(pred.nn.values$net.result)
+
+pred.nn.values$net.result = sapply(pred.nn.values$net.result, round, digits = 0)
+head(pred.nn.values$net.result)
+table(test$Private, pred.nn.values$net.result)
+plot(nn)
